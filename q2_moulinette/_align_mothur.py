@@ -7,10 +7,11 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ----------------------------------------------------------------------------
 
-import qiime2
-from pathlib import Path
+import os
+import shutil
 import subprocess
 from q2_types.feature_data import DNAFASTAFormat, AlignedDNAFASTAFormat
+
 
 # Inspired from https://github.com/qiime2/q2-alignment/blob/master/q2_alignment/_mafft.py
 def run_mothur(cmd, verbose=True):
@@ -24,16 +25,24 @@ def run_mothur(cmd, verbose=True):
         print(cmd, end='\n\n')
         subprocess.run(cmd, check=True, shell=True)
 
-def align_mothur(sequences: DNAFASTAFormat)-> AlignedDNAFASTAFormat:
+
+def align_mothur(sequences: DNAFASTAFormat,
+                 reference: AlignedDNAFASTAFormat) -> AlignedDNAFASTAFormat:
+    reference_fp = str(reference)
     sequences_fp = str(sequences)
-    sequences_escaped_fp=sequences_fp.replace("-", "\-") # Mothur does not allow hyphens in input names
+    # Escape hyphens in input names so mothur does not get upset
+    sequences_escaped_fp = sequences_fp.replace("-", "\-")
     result = AlignedDNAFASTAFormat()
-	
-    cmd = "mothur \"#set.dir(debug="+str(Path(sequences_fp).parent)+");align.seqs(fasta="+sequences_escaped_fp+", reference="+str(Path(__file__).parent)+"/assets/silva.bacteria.fasta);\""
+
+    cmd = "mothur \"#set.dir(debug={0});" \
+          "align.seqs(fasta={1}, reference={2});\"".format(
+            os.path.dirname(sequences_fp), sequences_escaped_fp, reference_fp)
     run_mothur(cmd)
-	
-	# Path to output file is in alignment_fp defined below:
-    alignment_fp=str(Path(sequences_fp).parent/(Path(sequences_fp).stem+".align"))
-	# ONE COMMAND MISSING HERE: How do I return the content of alignment_fp into result, which is an AlignedDNAFASTAFormat() object?
-    return AlignedDNAFASTAFormat(result)
-   
+    # Path to output file is in alignment_fp defined below:
+    mother_alignment_fp = os.path.splitext(sequences_fp)[0] + ".align"
+
+    # copy the mothur output alignment to the AlignedDNAFASTAFormat filepath
+    shutil.copyfile(mother_alignment_fp, str(result))
+
+    # once the file is in place, just return the AlignedDNAFASTAFormat object
+    return result
