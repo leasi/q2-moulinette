@@ -9,7 +9,8 @@
 # TODO: add proper citations
 
 import qiime2
-from q2_types.feature_data import FeatureData, Sequence, Taxonomy, AlignedSequence
+from q2_types.feature_data import (FeatureData, Sequence, Taxonomy,
+                                   AlignedSequence)
 import q2_moulinette
 from q2_moulinette._extract_bifs import extract_bifs
 from q2_moulinette._align_mothur import align_mothur
@@ -18,13 +19,12 @@ from q2_moulinette._align_mothur import align_mothur
 plugin = qiime2.plugin.Plugin(
     name='moulinette',
     version=q2_moulinette.__version__,
-    website='http://www.github.com/cduvallet/q2-perc-norm',
+    website='http://www.github.com/leasi/q2-moulinette',
     package='q2_moulinette',
-    description=('This QIIME 2 plugin performs a model-free normalization '
-                 'procedure where features (i.e. bacterial taxa) in case '
-                 'samples are converted to percentiles of the equivalent '
-                 'features in control samples within a study prior to pooling data across studies.'),
-    short_description='Plugin to identify Bifidobacterium subspecies based on SNVs in V3-V4 16S rDNA sequences',
+    description=('QIIME 2 plugin to identify Bifidobacterium subspecies based '
+                 'on SNVs in V3-V4 16S rDNA sequences.'),
+    short_description=('Plugin to identify Bifidobacterium subspecies based '
+                       'on SNVs in V3-V4 16S rDNA sequences'),
     user_support_text=('TODO')
 )
 
@@ -45,17 +45,19 @@ plugin.pipelines.register_function(
     output_descriptions={
         'bifs_seqs': ('Representative sequences of each OTU annotated as genus Bifidobacterium.')},
     name='Extract Bifidobacterium representative sequences',
-    description=('Extracts Bifidobacterium representative sequences') 
+    description=('Extracts Bifidobacterium representative sequences')
 )
 
 plugin.methods.register_function(
     function=align_mothur,
-    inputs={'sequences': FeatureData[Sequence]},
+    inputs={'sequences': FeatureData[Sequence],
+            'reference': FeatureData[AlignedSequence]},
     outputs=[('alignment', FeatureData[AlignedSequence])],
-    input_descriptions={'sequences': 'The sequences to be aligned.'},
+    input_descriptions={'sequences': 'The sequences to be aligned.',
+                        'reference': 'Reference alignment to align against'},
     output_descriptions={'alignment': 'The aligned sequences.'},
     parameters={},
     parameter_descriptions={},
-    name='Alignment of sequences on SILVA using mothur', 
+    name='Alignment of sequences on SILVA using mothur',
     description=("Alignment of sequences on SILVA using mothur"),
 )
